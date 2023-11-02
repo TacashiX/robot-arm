@@ -28,7 +28,7 @@ def hello_world():
 @app.route("/api/home", methods=['POST'])
 def arm_home():
     data = request.get_json()
-    #arm.movement.move(arm.movement.home_pos, data['smoothing'], data['speed'])
-    arm.movement.basic_move(arm.movement.home_pos)
+    arm.movement.move(arm.movement.home_pos, data['smoothing'], data['speed'])
+    #arm.movement.basic_move(arm.movement.home_pos)
 
 #Gotta add verification that speed is not null

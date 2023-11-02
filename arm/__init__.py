@@ -63,7 +63,31 @@ j1r2_servo = servo.Servo(pca.channels[J1R2_CHANNEL], min_pulse=500, max_pulse=25
 j1r1_servo = servo.Servo(pca.channels[J1R1_CHANNEL], min_pulse=500, max_pulse=2500, actuation_range=180)
 base_servo = servo.Servo(pca.channels[BASE_CHANNEL], min_pulse=500, max_pulse=2500, actuation_range=180)
 
+class j1:
+    def __init__(self, j1l, j1r1, j1r2):
+        self.j1l = j1l
+        self.j1r1 = j1r1
+        self.j1r2 = j1r2
+        self.L_off = -7
+        self.R1_off = 1
+        self.R2_off = 0
+    def rest(self):
+        self.j1r1.angle = None
+    @property
+    def angle(self):
+        return self._angle
+    @angle.setter
+    def angle(self, new_angle: int) -> None:
+        if new_angle is None:
+            self.j1l.angle = None
+            self.j1r1.angle = None
+            self.j1r2.angle = None
+            return
+        self.j1l.angle = new_angle + self.L_off
+        self.j1r1.angle = abs(new_angle + self.R1_off - 180)
+        self.j1r2.angle = new_angle + self.R2_off
 
+j1_servo = j1(j1l_servo, j1r1_servo, j1r2_servo)
 #Done initializing 
 status_led.color = GREEN
 movement.disable_all()
