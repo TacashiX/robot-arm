@@ -3,7 +3,7 @@ from time import sleep
 from threading import Thread
 
 home_pos = [84, 40, 140, 100, 180, 90, 90]
-last_pos = []
+last_pos = [84, 40, 140, 100, 180, 90, 90]
 default_speed = 1000
 servos = []
 servos.append(arm.base_servo)
@@ -42,6 +42,7 @@ def basic_move(angles):
     print("moved everything")
     sleep(1)
     arm.j1_servo.rest()
+    global last_pos
     last_pos = angles
 
 def disable_all():
@@ -60,8 +61,10 @@ def move(angles, smooth, speed):
     if not smooth:
         basic_move(angles)
     else: 
+        global last_pos
         for i in range(len(angles)):
             Thread(target=smooth_move, args=[servos[i], last_pos[i], angles[i], speed]).run()
+        print('Last Pos: ' + last_pos + ' New Pos: ' + angles)
         last_pos = angles
 
 def smooth_move(servo, old_pos, new_pos, ms):
@@ -69,8 +72,8 @@ def smooth_move(servo, old_pos, new_pos, ms):
     if steps > 0:
         for i in range(1,steps+1):
             servo.angle = old_pos + i
-            sleep(ms/steps)
+            sleep(ms/steps/1000)
     if steps < 0:
         for i in range(-1,steps-1):
             servo.angle = old_pos + i
-            sleep(ms/steps)
+            sleep(ms/steps/1000)
