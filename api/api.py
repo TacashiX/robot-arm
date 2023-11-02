@@ -14,8 +14,8 @@ def hell():
 def basic():
     data = request.get_json()
     
-    arm.movement.basic_move(data['angles'])
-    
+    #arm.movement.basic_move(data['angles'])
+    arm.movement.move(data['angles'], data['smoothing'], data['speed'])
     
     return data['angles']
     #return '', 204

@@ -60,13 +60,17 @@ def move(angles, smooth, speed):
     if not smooth:
         basic_move(angles)
     else: 
-        for i in len(angles):
+        for i in range(len(angles)):
             Thread(target=smooth_move, args=[servos[i], last_pos[i], angles[i], speed]).run()
         last_pos = angles
 
 def smooth_move(servo, old_pos, new_pos, ms):
     steps = new_pos - old_pos
-    for i in range(steps):
-        servo.angle = old_pos + i
-        sleep(ms/steps)
-
+    if steps > 0:
+        for i in range(1,steps+1):
+            servo.angle = old_pos + i
+            sleep(ms/steps)
+    if steps < 0:
+        for i in range(-1,steps-1):
+            servo.angle = old_pos + i
+            sleep(ms/steps)
