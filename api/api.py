@@ -31,5 +31,5 @@ def arm_home():
     data = request.get_json()
     arm.movement.move(arm.movement.home_pos, data['smoothing'], data['speed'])
     #arm.movement.basic_move(arm.movement.home_pos)
-
+    return "homing"
 #Gotta add verification that speed is not null
