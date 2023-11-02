@@ -64,7 +64,11 @@ def move(angles, smooth, speed):
         global last_pos
         for i in range(len(angles)):
             Thread(target=smooth_move, args=[servos[i], last_pos[i], angles[i], speed]).run()
-        print('Last Pos: ' + last_pos + ' New Pos: ' + angles)
+        print('Last Pos:')
+        print(last_pos)
+        print('New Pos:')
+        print(angles)
+
         last_pos = angles
 
 def smooth_move(servo, old_pos, new_pos, ms):
