@@ -1,6 +1,7 @@
 import arm
 from time import sleep
 from threading import Thread
+import multiprocessing
 
 home_pos = [84, 40, 140, 100, 180, 90, 90]
 last_pos = [84, 40, 140, 100, 180, 90, 90]
@@ -58,18 +59,28 @@ def disable_all():
     print("servos disabled")
 
 def move(angles, smooth, speed):
+    global last_pos
     if not smooth:
         basic_move(angles)
     else: 
-        global last_pos
-        for i in range(len(angles)):
-            Thread(target=smooth_move, args=[servos[i], last_pos[i], angles[i], int(speed)]).run()
+        if __name__ == "__main__":
+            jobs = []
+            for i in range(len(angles)):
+                process = multiprocessing.Process(target=smooth_move, args=(servos[i], last_pos[i], angles[i], int(speed)))
+                jobs.append(process)
+            for j in jobs:
+                j.start()
+            #Ensure processes have finished 
+            for j in jobs:
+                j.join()
+        
         print('Last Pos:')
         print(last_pos)
         print('New Pos:')
         print(angles)
-
         last_pos = angles
+        sleep(3)
+        arm.j1_servo.rest()
 
 def smooth_move(servo, old_pos, new_pos, ms):
     steps = new_pos - old_pos
