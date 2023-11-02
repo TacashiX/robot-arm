@@ -90,5 +90,5 @@ class j1:
 j1_servo = j1(j1l_servo, j1r1_servo, j1r2_servo)
 #Done initializing 
 status_led.color = GREEN
-movement.disable_all()
+
 print("-----------------------------INIT RAN-------------------------------")

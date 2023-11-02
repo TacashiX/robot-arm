@@ -5,7 +5,14 @@ from threading import Thread
 home_pos = [84, 40, 140, 100, 180, 90, 90]
 last_pos = []
 default_speed = 1000
-servos = [arm.base_servo, arm.j1_servo, arm.j2_servo, arm.j3_servo, arm.j4_servo, arm.j5_servo, arm.gripper_servo]
+servos = []
+servos.append(arm.base_servo)
+servos.append(arm.j1_servo)
+servos.append(arm.j2_servo)
+servos.append(arm.j3_servo)
+servos.append(arm.j4_servo)
+servos.append(arm.j5_servo)
+servos.append(arm.gripper_servo)
 
 # def move_j1 (pos):
 #     L_off = -7
@@ -59,7 +66,7 @@ def move(angles, smooth, speed):
 
 def smooth_move(servo, old_pos, new_pos, ms):
     steps = new_pos - old_pos
-    for i in range(steps): 
+    for i in range(steps):
         servo.angle = old_pos + i
         sleep(ms/steps)
 
