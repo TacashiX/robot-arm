@@ -2,6 +2,7 @@ import numpy as np
 # from matplotlib import pyplot as plt
 import time
 
+
 def generate_curve(total_time, min_d=20, max_d=50, std_dev_factor=4):
     #calc steps, works in my head. might not work in reality 
     steps = int(total_time / ((min_d + max_d)/2)) 
@@ -58,7 +59,7 @@ def move_arm(new_pos, curr_pos, speed):
     return 
 
 #Global vars to simulate values that should be part of some class
-curr_pos = [] 
+# curr_pos = [] 
 
 '''
 changes:
@@ -68,3 +69,4 @@ changes:
 
     '''
 
+print(generate_curve(3000))

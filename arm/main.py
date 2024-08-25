@@ -1,6 +1,8 @@
 import time
 import numpy as np
 
+from sim import bulletsim
+
 class Fenrir:
     
     RGB_BLUE_CHANNEL = 0
@@ -31,8 +33,9 @@ class Fenrir:
     accel_minmax = [15,40]
     accel_std_dev = 4
 
-    def __init__(self, simulate=False):
+    def __init__(self, bullet, simulate=False):
         self.simulate = simulate
+        self.bullet = bullet
         if not self.simulate: 
             from board import SCL, SDA
             import busio
@@ -71,11 +74,11 @@ class Fenrir:
             self.status_led.color = self.GREEN
 
         #if simulate 
-        else: 
+        # else: 
             # import ..sim
-            from .. import sim
+            # from .. import sim
             #just use robotobj.bullet.update() etc in main script? 
-            self.bullet = sim.Simulation()
+            # self.bullet = sim.Simulation()
 
     def move_all(self, new_position):
         #check position for validity then move or pass/red light 
@@ -99,6 +102,7 @@ class Fenrir:
 
     def home(self):
         self.move_all(self.home_pos)
+        # self.move_arm(self.home_pos)
 
     def disable_servos(self):
         for servo in self.servolist: 
@@ -138,8 +142,12 @@ class Fenrir:
 
         for ms in curve: 
             tmp_pos = [ y-1 if x == 0 and y>z else y+1 if x == 0 and y<z else x+y for x,y,z in zip(step_distance, self.curr_pos, new_pos) ]
+            print(f"Curr pos: {self.curr_pos}, Tmp pos: {tmp_pos}, Time: {ms}")
             self.move_all(tmp_pos)
-            time.sleep(ms)
+            time.sleep(ms/1000)
+            if tmp_pos == self.curr_pos:
+                break
+            # print(curve)
 
         
         #deal with left over shit from float->int | new_pos- (step_distance*len(curve))
@@ -148,6 +156,6 @@ class Fenrir:
         for _ in range(abs(max(dist, key=abs))):
             tmp_pos = [ x-1 if x>y else x+1 if x<y else x for x,y in zip(self.curr_pos, new_pos) ]
             self.move_all(tmp_pos)
-            time.sleep(self.accel_minmax[1])
+            time.sleep(self.accel_minmax[1]/1000)
 
 

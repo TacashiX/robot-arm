@@ -38,7 +38,7 @@ class Simulation:
         #arm uses 0-180deg, last value gripper, useless for now but it will move useless j1 gear
         #this will implode if arm list changes size
         rad_positions = []
-        for i in range(inputs): 
+        for i in range(len(inputs)): 
             normalized_pos  = inputs[i] / 180
             #map normalized position to simulation joint limits
             rad_pos = normalized_pos * (self.joints[i][3] - self.joints[i][2]) + self.joints[i][2]
@@ -46,7 +46,10 @@ class Simulation:
         return rad_positions
 
     def updatePosition(self, rawPos):
+        print("-------------------")
+        print(rawPos)
         pos = self.translateAngle(rawPos)
+        print(pos)
         p.setJointMotorControlArray(self.robotId, self.joint_indices, p.POSITION_CONTROL, targetPositions=pos) 
         self.update()
 
