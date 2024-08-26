@@ -46,10 +46,10 @@ class Simulation:
         return rad_positions
 
     def updatePosition(self, rawPos):
-        print("-------------------")
-        print(rawPos)
+        # print("-------------------")
+        # print(rawPos)
         pos = self.translateAngle(rawPos)
-        print(pos)
+        # print(pos)
         p.setJointMotorControlArray(self.robotId, self.joint_indices, p.POSITION_CONTROL, targetPositions=pos) 
         self.update()
 

@@ -1,7 +1,7 @@
 import time
 import numpy as np
 
-from sim import bulletsim
+# from sim import bulletsim
 
 class Fenrir:
     
@@ -28,10 +28,11 @@ class Fenrir:
     "List of servo offsets, Format: [base, [j1r1,j1r2,j1l], j2, j3, j4, j5, gripper]"
     home_pos = [84, 40, 140, 100, 180, 90, 90]
     curr_pos = [84, 40, 140, 100, 180, 90, 90]
-    speed = 100
+    speed = 15
     "time to move servo 1 degree in ms" 
-    accel_minmax = [15,40]
+    accel_minmax = [30,100]
     accel_std_dev = 4
+    "higher value -> faster acceleration"
 
     def __init__(self, bullet, simulate=False):
         self.simulate = simulate
@@ -120,14 +121,16 @@ class Fenrir:
         #calc steps, works in my head. might not work in reality
         steps = int(total_time / ((self.accel_minmax[0] + self.accel_minmax[1])/2))
         #create time vector
-        time_vector = np.linspace(0, self.speed, steps)
+        time_vector = np.linspace(0, total_time, steps)
         mean = total_time / 2
         std_dev = total_time / self.accel_std_dev
         #generate curve
-        curve = self.accel_minmax[1] * np.exp(-0,5 * ((time_vector - mean) / std_dev) **2)
+        curve = self.accel_minmax[1] * np.exp(-0.5 * ((time_vector - mean) / std_dev) **2)
         #scale curve to respect min and max values and flip
         curve = np.interp(curve, (curve.min(), curve.max()), (self.accel_minmax[1], self.accel_minmax[0]))
         #return array with int values instead of float
+        print(f"steps: {steps}, min: {self.accel_minmax[0]}, max: {self.accel_minmax[1]}, total time: {total_time}, stdevfactor: {self.accel_std_dev}")
+        print(curve.astype(int).tolist())
         return curve.astype(int).tolist()
 
     def move_arm(self, new_pos):
@@ -135,27 +138,31 @@ class Fenrir:
         dist = np.array([(x - y) for x,y in zip(new_pos, self.curr_pos)])
         #total_time from max distance
         total_time = self.speed * abs(max(dist, key=abs))
+        if abs(max(dist, key=abs)) < 5:
+            self.move_all(new_pos)
+            time.sleep(self.accel_minmax[1]/1000)
+            return
+
         #generate curve
         curve = self.generate_accel_curve(total_time)
         step_distance = [ int(x/len(curve)) for x in dist ]
         # step_distance = np.astype(dist/len(curve), int)
 
+        print(f'Current pos: {self.curr_pos}')
+        print(f'New Pos    : {new_pos}')
+        print(f'Distances  : {dist}')
+        print(f'Step dist  : {step_distance}')
+        print(f'steps: {len(curve)}')
+
         for ms in curve: 
             tmp_pos = [ y-1 if x == 0 and y>z else y+1 if x == 0 and y<z else x+y for x,y,z in zip(step_distance, self.curr_pos, new_pos) ]
-            print(f"Curr pos: {self.curr_pos}, Tmp pos: {tmp_pos}, Time: {ms}")
+            # print(f"Curr pos: {self.curr_pos}, Tmp pos: {tmp_pos}, Time: {ms}")
+            if np.array_equal(tmp_pos, new_pos):
+                print(f"Aborting at {ms}ms delay")
+                self.move_all(tmp_pos)
+                return
+
             self.move_all(tmp_pos)
             time.sleep(ms/1000)
-            if tmp_pos == self.curr_pos:
-                break
-            # print(curve)
-
-        
-        #deal with left over shit from float->int | new_pos- (step_distance*len(curve))
-        #just move step by step i dont give a fuck i think. no more math. i'll change it if its annoying me
-        dist = np.array([(x - y) for x,y in zip(new_pos, self.curr_pos)])
-        for _ in range(abs(max(dist, key=abs))):
-            tmp_pos = [ x-1 if x>y else x+1 if x<y else x for x,y in zip(self.curr_pos, new_pos) ]
-            self.move_all(tmp_pos)
-            time.sleep(self.accel_minmax[1]/1000)
-
-
+        #go again if position not reached
+        self.move_arm(new_pos)

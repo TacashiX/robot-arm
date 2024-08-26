@@ -35,26 +35,27 @@ def generate_bell_curve(min_val, max_val, total_time, std_dev_factor=6, num_poin
     std_dev = total_time / std_dev_factor  # Adjust the std_dev_factor to change the curve shape
     
     # Generate the Gaussian curve
-    gaussian_curve = max_val * np.exp(-0.5 * ((time_vector - mean) / std_dev) ** 2)
+    gaussian_curve = max_val * np.exp(-0.5 * ((time_vector - mean) / std_dev) **2)
     
     # Scale the curve to ensure min and max constraints
-    gaussian_curve = np.interp(gaussian_curve, (gaussian_curve.min(), gaussian_curve.max()), (min_val, max_val))
-    
-    return gaussian_curve.tolist()
+    gaussian_curve = np.interp(gaussian_curve, (gaussian_curve.min(), gaussian_curve.max()), (max_val, min_val))
+    print(f"steps: {num_points}, min: {min_val}, max: {max_val}, total time: {total_time}, stdevfactor: {std_dev_factor}") 
+    return gaussian_curve.astype(int).tolist()
 
 
 
 # Example usage
-min_val = 30
-max_val = 15
-total_time = 1000
+min_val = 60
+max_val = 100
+total_time = 1200
 
 #higher = narrower
 std_dev_factor = 4
 
 # acceleration_curve = generate_bell_curve(min_val, max_val, total_time)
-acceleration_curve = generate_bell_curve(min_val, max_val, total_time, std_dev_factor)
+acceleration_curve = generate_bell_curve(min_val, max_val, total_time, std_dev_factor, num_points=15)
 
 print(acceleration_curve)
+print(len(acceleration_curve))
 plt.plot(acceleration_curve)
 plt.show()
