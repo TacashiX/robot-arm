@@ -1,5 +1,7 @@
 import time
 import numpy as np
+import logging
+log = logging.getLogger(__name__)
 
 # from sim import bulletsim
 
@@ -34,7 +36,7 @@ class Fenrir:
     accel_std_dev = 4
     "higher value -> faster acceleration"
 
-    def __init__(self, bullet, simulate=False):
+    def __init__(self, bullet=None, simulate=False):
         self.simulate = simulate
         self.bullet = bullet
         if not self.simulate: 
@@ -73,13 +75,7 @@ class Fenrir:
             self.servolist.append(servo.Servo(self.pca.channels[GRIPPER_CHANNEL], min_pulse=500, max_pulse=2500, actuation_range=180))
 
             self.status_led.color = self.GREEN
-
-        #if simulate 
-        # else: 
-            # import ..sim
-            # from .. import sim
-            #just use robotobj.bullet.update() etc in main script? 
-            # self.bullet = sim.Simulation()
+            log.info("Fenrir initialized")
 
     def move_all(self, new_position):
         #check position for validity then move or pass/red light 
@@ -102,10 +98,12 @@ class Fenrir:
         self.servolist[1][0].angle = None
 
     def home(self):
+        log.info(f"Moving to home position {self.home_pos}")
         self.move_all(self.home_pos)
         # self.move_arm(self.home_pos)
 
     def disable_servos(self):
+        log.info("Disabling servos")
         for servo in self.servolist: 
             if type(servo) == list:
                 for s in servo:
@@ -115,7 +113,9 @@ class Fenrir:
 
     def validate_position(self, pos): 
         #for now just 0-180 check, later check for set limits and use bullet collision 
-        return all(x >= 0 and x <= 180 for x in pos)
+        valid = all(x >= 0 and x <= 180 for x in pos)
+        if not valid: 
+            log.warning(f"position {pos} is not valid, aborting movement")
 
     def generate_accel_curve(self, total_time):
         #calc steps, works in my head. might not work in reality
@@ -129,16 +129,18 @@ class Fenrir:
         #scale curve to respect min and max values and flip
         curve = np.interp(curve, (curve.min(), curve.max()), (self.accel_minmax[1], self.accel_minmax[0]))
         #return array with int values instead of float
-        print(f"steps: {steps}, min: {self.accel_minmax[0]}, max: {self.accel_minmax[1]}, total time: {total_time}, stdevfactor: {self.accel_std_dev}")
-        print(curve.astype(int).tolist())
+        log.debug(f"steps: {steps}, min: {self.accel_minmax[0]}, max: {self.accel_minmax[1]}, total time: {total_time}, stdevfactor: {self.accel_std_dev}")
+        log.debug(f'Acc curve: {curve.astype(int).tolist()}')
         return curve.astype(int).tolist()
 
     def move_arm(self, new_pos):
         #calc distances
+        log.info(f'Moving arm to {new_pos} from {self.curr_pos}')
         dist = np.array([(x - y) for x,y in zip(new_pos, self.curr_pos)])
         #total_time from max distance
         total_time = self.speed * abs(max(dist, key=abs))
-        if abs(max(dist, key=abs)) < 5:
+        if abs(max(dist, key=abs)) < 6:
+            log.debug('Less than 5 degrees remaining, finishing movement')
             self.move_all(new_pos)
             time.sleep(self.accel_minmax[1]/1000)
             return
@@ -146,23 +148,22 @@ class Fenrir:
         #generate curve
         curve = self.generate_accel_curve(total_time)
         step_distance = [ int(x/len(curve)) for x in dist ]
-        # step_distance = np.astype(dist/len(curve), int)
 
-        print(f'Current pos: {self.curr_pos}')
-        print(f'New Pos    : {new_pos}')
-        print(f'Distances  : {dist}')
-        print(f'Step dist  : {step_distance}')
-        print(f'steps: {len(curve)}')
+        log.debug(f'{self.curr_pos=}')
+        log.debug(f'{new_pos=}')
+        log.debug(f'{dist=}')
+        log.debug(f'{step_distance=}')
+        log.debug(f'steps: {len(curve)}')
 
         for ms in curve: 
             tmp_pos = [ y-1 if x == 0 and y>z else y+1 if x == 0 and y<z else x+y for x,y,z in zip(step_distance, self.curr_pos, new_pos) ]
-            # print(f"Curr pos: {self.curr_pos}, Tmp pos: {tmp_pos}, Time: {ms}")
             if np.array_equal(tmp_pos, new_pos):
-                print(f"Aborting at {ms}ms delay")
+                log.debug("finishing movement in main pass")
                 self.move_all(tmp_pos)
                 return
 
             self.move_all(tmp_pos)
             time.sleep(ms/1000)
         #go again if position not reached
+        log.debug("position not reached, going again")
         self.move_arm(new_pos)
