@@ -2,6 +2,8 @@ import pybullet as p
 import time 
 import pybullet_data
 import pkg_resources
+import logging
+log = logging.getLogger(__name__)
 
 class Simulation:
 
@@ -25,6 +27,8 @@ class Simulation:
             self.joints.append((j, info[1].decode("ascii"), info[8], info[9]))
             
         self.joint_indices = [j[0] for j in self.joints]
+        log.info("Simulation initialized")
+        log.debug(f'Detected joints: {self.joints}')
 
         #add joints to debug values for display and control
         if directControl:
@@ -43,13 +47,11 @@ class Simulation:
             #map normalized position to simulation joint limits
             rad_pos = normalized_pos * (self.joints[i][3] - self.joints[i][2]) + self.joints[i][2]
             rad_positions.append(rad_pos)
+        log.debug(f"translated position {inputs} to {rad_positions}")
         return rad_positions
 
     def updatePosition(self, rawPos):
-        # print("-------------------")
-        # print(rawPos)
         pos = self.translateAngle(rawPos)
-        # print(pos)
         p.setJointMotorControlArray(self.robotId, self.joint_indices, p.POSITION_CONTROL, targetPositions=pos) 
         self.update()
 
