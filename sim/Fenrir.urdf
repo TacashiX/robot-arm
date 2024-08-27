@@ -185,28 +185,28 @@
   </collision>
 </link>
 
-<link name="joint_four_bearing1">
-  <inertial>
-    <origin xyz="0.003934463042572445 0.00011425317887628003 -0.0007111926335709451" rpy="0 0 0"/>
-    <mass value="0.02841005068494341"/>
-    <inertia ixx="2.7160016020009135e-06" iyy="1.530415771607268e-06" izz="1.5681730078755183e-06" ixy="3.4585257333985774e-08" iyz="-6.251171752211267e-09" ixz="-2.144729253423421e-07"/>
-  </inertial>
-  <visual>
-    <origin xyz="0.120417 0.001832 -0.235599" rpy="0 0 0"/>
-    <geometry>
-      <mesh filename="meshes/joint_four_bearing1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-    <material/>
-  </visual>
-  <collision>
-    <origin xyz="0.120417 0.001832 -0.235599" rpy="0 0 0"/>
-    <geometry>
-      <mesh filename="meshes/joint_four_bearing1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
+<!-- <link name="joint_four_bearing1"> -->
+<!--   <inertial> -->
+<!--     <origin xyz="0.003934463042572445 0.00011425317887628003 -0.0007111926335709451" rpy="0 0 0"/> -->
+<!--     <mass value="0.02841005068494341"/> -->
+<!--     <inertia ixx="2.7160016020009135e-06" iyy="1.530415771607268e-06" izz="1.5681730078755183e-06" ixy="3.4585257333985774e-08" iyz="-6.251171752211267e-09" ixz="-2.144729253423421e-07"/> -->
+<!--   </inertial> -->
+<!--   <visual> -->
+<!--     <origin xyz="0.120417 0.001832 -0.235599" rpy="0 0 0"/> -->
+<!--     <geometry> -->
+<!--       <mesh filename="meshes/joint_four_bearing1.stl" scale="0.001 0.001 0.001"/> -->
+<!--     </geometry> -->
+<!--     <material name="silver"/> -->
+<!--     <material/> -->
+<!--   </visual> -->
+<!--   <collision> -->
+<!--     <origin xyz="0.120417 0.001832 -0.235599" rpy="0 0 0"/> -->
+<!--     <geometry> -->
+<!--       <mesh filename="meshes/joint_four_bearing1.stl" scale="0.001 0.001 0.001"/> -->
+<!--     </geometry> -->
+<!--   </collision> -->
+<!-- </link> -->
+<!---->
 <link name="joint_three_body1">
   <inertial>
     <origin xyz="-0.05737050355308056 -0.012318507158123375 -0.00038901874202051934" rpy="0 0 0"/>
@@ -536,7 +536,8 @@
   <parent link="j3_servo1"/>
   <child link="joint_four_body1"/>
   <axis xyz="-0.98365 -0.02867 0.177792"/>
-  <limit upper="1.570796" lower="-1.570796" effort="100" velocity="100"/>
+  <!-- <limit upper="1.570796" lower="-1.570796" effort="100" velocity="100"/> -->
+  <limit upper="3.141593" lower="0.0" effort="100" velocity="100"/>
 </joint>
 <transmission name="j3_tran">
   <type>transmission_interface/SimpleTransmission</type>
@@ -549,12 +550,12 @@
   </actuator>
 </transmission>
 
-<joint name="Rigid_13" type="fixed">
-  <origin xyz="-0.120989 -0.003526 0.021868" rpy="0 0 0"/>
-  <parent link="joint_four_body1"/>
-  <child link="joint_four_bearing1"/>
-</joint>
-
+<!-- <joint name="Rigid_13" type="fixed"> -->
+<!--   <origin xyz="-0.120989 -0.003526 0.021868" rpy="0 0 0"/> -->
+<!--   <parent link="joint_four_body1"/> -->
+<!--   <child link="joint_four_bearing1"/> -->
+<!-- </joint> -->
+<!---->
 <joint name="Rigid_14" type="fixed">
   <origin xyz="-0.024107 0.000222 0.015149" rpy="0 0 0"/>
   <parent link="joint_three_coupler1"/>
@@ -596,7 +597,8 @@
   <parent link="j5_servo1"/>
   <child link="gripper_coupler1"/>
   <axis xyz="0.762623 -0.618577 -0.189126"/>
-  <limit upper="1.570796" lower="-1.570796" effort="100" velocity="100"/>
+  <!-- <limit upper="1.570796" lower="-1.570796" effort="100" velocity="100"/> -->
+  <limit upper="3.141593" lower="0.0" effort="100" velocity="100"/>
 </joint>
 <transmission name="j5_tran">
   <type>transmission_interface/SimpleTransmission</type>
@@ -644,7 +646,7 @@
   <parent link="mg996r_11"/>
   <child link="joint_two_body1"/>
   <axis xyz="-0.029134 0.999576 0.0"/>
-  <limit upper="1.570796" lower="-1.570796" effort="100" velocity="100"/>
+  <limit upper="-1.570796" lower="1.570796" effort="100" velocity="100"/>
 </joint>
 <transmission name="j1_tran">
   <type>transmission_interface/SimpleTransmission</type>
