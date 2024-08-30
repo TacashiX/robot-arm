@@ -9,6 +9,11 @@
   <color rgba="0.000 0.000 0.000 1.000"/>
 </material>
 
+<material name="red">
+  <color rgba="1.000 0.000 0.000 1.000"/>
+</material>
+
+
 <link name="base_link">
   <inertial>
     <origin xyz="1.8190649168632872e-07 1.8190679612567247e-07 0.0045562324440714536" rpy="0 0 0"/>
@@ -471,6 +476,28 @@
   </collision>
 </link>
 
+<link name="sim_pointer1">
+  <inertial>
+    <origin xyz="-0.007625905118528564 0.0061862666874769184 0.0018916087773063472" rpy="0 0 0"/>
+    <mass value="0.0013428188019054788"/>
+    <inertia ixx="2.0173655424434735e-08" iyy="2.8897181713829915e-08" izz="4.4106240274168374e-08" ixy="2.068427611062737e-08" iyz="-5.129591790983552e-09" ixz="6.324095963878705e-09"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.192861 -0.043277 -0.238362" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="meshes/sim_pointer1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="red"/>
+    <material/>
+  </visual>
+  <collision>
+    <origin xyz="0.192861 -0.043277 -0.238362" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="meshes/sim_pointer1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
 <joint name="Rigid_1" type="fixed">
   <origin xyz="-0.010524 0.008536 0.00261" rpy="0 0 0"/>
   <parent link="gripper_coupler1"/>
@@ -611,6 +638,12 @@
   </actuator>
 </transmission>
 
+<joint name="asim_joint" type="fixed">
+  <origin xyz="-0.020744 0.016825 0.005144" rpy="1.57 0.15 -0.71"/>
+  <parent link="gripper_body1"/>
+  <child link="sim_pointer1"/>
+</joint>
+
 <joint name="Rigid_19" type="fixed">
   <origin xyz="-0.033129 0.001706 0.015759" rpy="0 0 0"/>
   <parent link="gripper_body1"/>
@@ -645,8 +678,9 @@
   <origin xyz="0.035604 -0.031342 -0.04791" rpy="0 0 0"/>
   <parent link="mg996r_11"/>
   <child link="joint_two_body1"/>
-  <axis xyz="-0.029134 0.999576 0.0"/>
-  <limit upper="-1.570796" lower="1.570796" effort="100" velocity="100"/>
+  <!-- <axis xyz="-0.029134 0.999576 0.0"/> -->
+  <axis xyz="-0.029134 -0.999576 0.0"/>
+  <limit upper="1.570796" lower="-1.570796" effort="100" velocity="100"/>
 </joint>
 <transmission name="j1_tran">
   <type>transmission_interface/SimpleTransmission</type>
