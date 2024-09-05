@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import logging
+import ikpy.chain
 log = logging.getLogger(__name__)
 
 # from sim import bulletsim
@@ -29,16 +30,21 @@ class Fenrir:
     offsets = [0, [1,0,-7],0 ,0 ,0, 0, 0]
     "List of servo offsets, Format: [base, [j1r1,j1r2,j1l], j2, j3, j4, j5, gripper]"
     home_pos = [84, 40, 140, 100, 180, 90, 90]
+    chain_home_pos = [ 0, -1.675516266666666, 0, 0,-0.872664444444444, 0, 0.872664444444444, 0, 1.745329444444444, 0,  0.785398000000000, 0, 1.570796, 0, 0]
     curr_pos = [84, 40, 140, 100, 180, 90, 90]
     speed = 15
     "time to move servo 1 degree in ms" 
     accel_minmax = [30,100]
     accel_std_dev = 4
     "higher value -> faster acceleration"
+    orientation_axis = "X"
+    target_orientation = [0,0,1]
+    gripper_limit = [0,50]
 
-    def __init__(self, bullet=None, simulate=False):
+    def __init__(self, bullet=None, simulate=False, urdf_path="sim/Fenrir.urdf"):
         self.simulate = simulate
         self.bullet = bullet
+        self.urdf_path = urdf_path
         if not self.simulate: 
             from board import SCL, SDA
             import busio
@@ -77,6 +83,11 @@ class Fenrir:
             self.status_led.color = self.GREEN
             log.info("Fenrir initialized")
 
+        #Init IK chain
+        self.ikchain = ikpy.chain.Chain.from_urdf_file(urdf_path, base_elements=["base_link"],active_links_mask=[False, True, False, False, True, False, True, False, True, False, True, False, True, False, False])
+        self.ikpos = [self.chain_home_pos] #home pos in radian here
+
+
     def move_all(self, new_position):
         #check position for validity then move or pass/red light 
         if not self.simulate and self.validate_position(new_position): 
@@ -84,10 +95,15 @@ class Fenrir:
                 if type(self.servolist[i]) == list: 
                     self.move_j1(new_position[i]) 
                 else: 
-                    self.servolist[i].angle = new_position[i]
+                    self.servolist[i].angle = self.apply_limit(new_position[i] + self.offsets[i], 0, 180, dec=0)
         else: 
             self.bullet.updatePosition(new_position)
         self.curr_pos = new_position
+
+    def move_gripper(self, step):
+        tmp_pos = self.apply_limit(self.curr_pos[6] + step, self.gripper_limit[0],self.gripper_limit[1])
+        self.servolist[6].angle = tmp_pos
+        self.curr_pos[6] = tmp_pos
 
     def move_j1(self, pos):
         self.servolist[1][0].angle = abs(pos + self.offsets[1][0] - 180)
@@ -100,6 +116,7 @@ class Fenrir:
     def home(self):
         log.info(f"Moving to home position {self.home_pos}")
         self.move_all(self.home_pos)
+        self.chainpos = self.chain_home_pos
         # self.move_arm(self.home_pos)
 
     def disable_servos(self):
@@ -167,3 +184,34 @@ class Fenrir:
         #go again if position not reached
         log.debug("position not reached, going again")
         self.move_arm(new_pos)
+
+
+    def move_coord(self, coords): 
+        r = self.ikchain.inverse_kinematics(coords, self.target_orientation, orientation_mode=self.orientation_axis,initial_position=self.ikpos)
+        self.move_all(self.chain_to_deg(r))
+        self.ikpos = r
+
+
+    def button_pressed(self): 
+        if GPIO.input(self.BUTTON_GPIO) == GPIO.LOW:
+            log.debug("Button pressed")
+            return True
+        else:
+            return False
+    
+    def apply_limit(self,val, min_val, max_val, dec=3):
+        if dec > 0: 
+            return round(max(min(val, max_val),min_val),dec)
+        else: 
+            return int(round(max(min(val, max_val),min_val),dec))
+
+    def chain_to_deg(self, rad_positions):
+        #might have to invert some values, no idea how physical servos are oriented
+        scaled_degrees = []
+        for i in [1,4,6,8,10,12]:
+            max_rad = self.ikchain.links[i].bounds[1]
+            min_rad = self.ikchain.links[i].bounds[0]
+            scaled_deg = 180* (rad_positions[i] - min_rad) / (max_rad - min_rad)
+            scaled_degrees.append(int(scaled_deg))
+        scaled_degrees.append(0)
+        return scaled_degrees

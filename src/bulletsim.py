@@ -55,7 +55,7 @@ class Simulation:
         p.setJointMotorControlArray(self.robotId, self.joint_indices, p.POSITION_CONTROL, targetPositions=pos) 
         self.update()
 
-    def guiControl(self): 
+    def guiControl(self):
         debugIds = []
         for i in range(len(self.joints)): 
             dbval = p.addUserDebugParameter(self.joints[i][1], self.joints[i][2], self.joints[i][3])
@@ -66,7 +66,11 @@ class Simulation:
             p.setJointMotorControlArray(self.robotId, self.joint_indices, p.POSITION_CONTROL, targetPositions=targetPos)
             p.stepSimulation()
             time.sleep(1./240.)
+        
+            
 
-
+    def move_radian(self, radian_pos):
+        p.setJointMotorControlArray(self.robotId, self.joint_indices, p.POSITION_CONTROL, targetPositions=radian_pos) 
+        self.update()
 
 
