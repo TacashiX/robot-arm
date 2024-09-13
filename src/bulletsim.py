@@ -3,18 +3,21 @@ import time
 import pybullet_data
 import pkg_resources
 import logging
+from pathlib import Path
 log = logging.getLogger(__name__)
 
 class Simulation:
 
-    def __init__(self, directControl=False):
+    def __init__(self,urdf, directControl=False):
         p.connect(p.GUI) # p.DIRECT for non-graphical
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0,0,-10)
         p.loadURDF("plane.urdf")
         p.resetDebugVisualizerCamera(cameraDistance=1.2, cameraYaw=50, cameraPitch=-35, cameraTargetPosition=[-0.31,0.26,-0.29])
-        urdf_file = pkg_resources.resource_filename('sim', 'Fenrir.urdf')
-        self.robotId = p.loadURDF(urdf_file, [0,0,0],
+        # urdf_file = pkg_resources.resource_filename('robot-arm/model', 'Fenrir.urdf')
+        # urdf_file = str(Path("../model/Fenrir.urdf"))
+        # print("urdf_file")
+        self.robotId = p.loadURDF(urdf, [0,0,0],
                              useFixedBase=1,
                              flags=p.URDF_USE_INERTIA_FROM_FILE)
 

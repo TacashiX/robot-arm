@@ -1,9 +1,9 @@
 from scipy.optimize import Bounds
-import arm
-import xbox
+import src.arm as arm
+import src.xbox as xbox
 import pygame
 import numpy as np
-import sim
+import src.bulletsim as sim
 import time 
 import ikpy.chain
 import logging, sys
@@ -13,8 +13,8 @@ import asyncio
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING, format="%(levelname)s: %(message)s")
 logging.info("testing this")
 
-mysim  = sim.Simulation()
-testing = arm.Fenrir(bullet=mysim, simulate=True) 
+mysim  = sim.Simulation("model/Fenrir.urdf")
+testing = arm.Fenrir(bullet=mysim, simulate=True, urdf_path="model/Fenrir.urdf") 
 
 # # approx movement area x +-0.3 y 0->-0.3 z 0 -> 0.4
 # debugIds = []
@@ -24,10 +24,11 @@ testing = arm.Fenrir(bullet=mysim, simulate=True)
 #
 #
 #3rd from last is the gripper rotation in mask
-my_chain = ikpy.chain.Chain.from_urdf_file("sim/Fenrir.urdf", base_elements=["base_link"],active_links_mask=[False, True, False, False, True, False, True, False, True, False, True, False, True, False, False])
+my_chain = ikpy.chain.Chain.from_urdf_file("model/Fenrir.urdf", base_elements=["base_link"],active_links_mask=[False, True, False, False, True, False, True, False, True, False, True, False, True, False, False])
 
 
-ik = my_chain.inverse_kinematics([0,0.15,0.2])
+# ik = my_chain.inverse_kinematics([0,0.15,0.2])
+ik = [ 0, -1.675516266666666, 0, 0,-0.872664444444444, 0, 0.872664444444444, 0, 1.745329444444444, 0,  0.785398000000000, 0, 1.570796, 0, 0]
 
 #ORIENTATION: 
 # axis X and [0,0,1] tells robot to align chains x axis with the absolute z axis (can see the axes in plot) 
@@ -103,44 +104,50 @@ def limit(val, min_val, max_val):
 #
 def main():
     global ik
-    try: 
-        joy = xbox.Joystick()
-        # async def main():
-        x=0
-        y=-0.15
-        z=0.2
-        while True:
-            xp=joy.leftX()
-            yp=joy.leftY()
-            zp=joy.rightY()
-            if abs(xp)>0.5: x=limit(x-xp/300,-0.3,0.3)
-            if abs(yp)>0.5: y=limit(y-yp/300,-0.3,0)
-            if abs(zp)>0.5: z=limit(z+zp/300,0,0.4)
-            # print(f'{x=},{y=},{z=}')
-            st = time.time()
-            ik = doIK([x,y,z], ik)
-            end = time.time() 
-            # print("Time: ",end-st)
-            rads = [ik[1],ik[4],ik[6],ik[8],ik[10],ik[12],0] #ik12
-            mysim.move_radian(rads)
-            time.sleep(1./240.)
-                # await asyncio.sleep(0.1)
+    joy = xbox.Joystick()
+    # async def main():
+    x=0
+    y=-0.15
+    z=0.2
+    while True:
+        xp=joy.leftX()
+        yp=joy.leftY()
+        zp=joy.rightY()
+        if abs(xp)>0.5: x=testing.apply_limit(x-xp/300,-0.3,0.3)
+        if abs(yp)>0.5: y=testing.apply_limit(y-yp/300,-0.3,0)
+        if abs(zp)>0.5: z=testing.apply_limit(z+zp/300,0,0.4)
+        # print(f'{x=},{y=},{z=}')
+
+        testing.move_coord([x,y,z])
+
+        # st = time.time()
+        # ik = doIK([x,y,z], ik)
+        # end = time.time() 
+        # # print("Time: ",end-st)
+        # rads = [ik[1],ik[4],ik[6],ik[8],ik[10],ik[12],0] #ik12
+        # mysim.move_radian(rads)
+        #
+        #
+        #
+        time.sleep(1./240.)
+            # await asyncio.sleep(0.1)
             
-    except Exception as e:
-        print(f"Error: {e}")
-
-    while True: 
-        try: 
-            print("trying to refresh")
-            joy = xbox.Joystick()
-            if joy.connectStatus:
-                main()
-            time.sleep(1)
-        except Exception as e:
-            print(f"Error: {e}")
-        except KeyboardInterrupt:
-            break
-
+main()
+    # except Exception as e:
+    #     print(f"Error: {e}")
+    #
+    # while True: 
+    #     try: 
+    #         print("trying to refresh")
+    #         joy = xbox.Joystick()
+    #         if joy.connectStatus:
+    #             main()
+    #         time.sleep(1)
+    #     except Exception as e:
+    #         print(f"Error: {e}")
+    #     except KeyboardInterrupt:
+    #         break
+    #
 # if __name__ == "__main__":
 #     main()
 #

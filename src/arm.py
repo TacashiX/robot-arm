@@ -40,11 +40,18 @@ class Fenrir:
     orientation_axis = "X"
     target_orientation = [0,0,1]
     gripper_limit = [0,50]
+    mode = "M"
+    "Current mode. M | C | D (Manual, Controller, Demo)" 
 
-    def __init__(self, bullet=None, simulate=False, urdf_path="sim/Fenrir.urdf"):
+    def __init__(self, bullet=None, simulate=False, urdf_path="model/Fenrir.urdf"):
         self.simulate = simulate
         self.bullet = bullet
         self.urdf_path = urdf_path
+        #Init IK chain
+        self.ikchain = ikpy.chain.Chain.from_urdf_file(urdf_path, base_elements=["base_link"],active_links_mask=[False, True, False, False, True, False, True, False, True, False, True, False, True, False, False])
+        self.ikpos = self.chain_home_pos #home pos in radian here
+
+
         if not self.simulate: 
             from board import SCL, SDA
             import busio
@@ -83,11 +90,6 @@ class Fenrir:
             self.status_led.color = self.GREEN
             log.info("Fenrir initialized")
 
-        #Init IK chain
-        self.ikchain = ikpy.chain.Chain.from_urdf_file(urdf_path, base_elements=["base_link"],active_links_mask=[False, True, False, False, True, False, True, False, True, False, True, False, True, False, False])
-        self.ikpos = [self.chain_home_pos] #home pos in radian here
-
-
     def move_all(self, new_position):
         #check position for validity then move or pass/red light 
         if not self.simulate and self.validate_position(new_position): 
@@ -116,17 +118,18 @@ class Fenrir:
     def home(self):
         log.info(f"Moving to home position {self.home_pos}")
         self.move_all(self.home_pos)
-        self.chainpos = self.chain_home_pos
+        self.ikpos = self.chain_home_pos
         # self.move_arm(self.home_pos)
 
     def disable_servos(self):
         log.info("Disabling servos")
-        for servo in self.servolist: 
-            if type(servo) == list:
-                for s in servo:
-                    s.angle = None
-            else: 
-                servo.angle = None
+        if not self.simulate:
+            for servo in self.servolist: 
+                if type(servo) == list:
+                    for s in servo:
+                        s.angle = None
+                else: 
+                    servo.angle = None
 
     def validate_position(self, pos): 
         #for now just 0-180 check, later check for set limits and use bullet collision 
@@ -187,15 +190,19 @@ class Fenrir:
 
 
     def move_coord(self, coords): 
+        # log.debug(f"chain: {self.ikchain}, {self.ikpos=}, {coords=}")
         r = self.ikchain.inverse_kinematics(coords, self.target_orientation, orientation_mode=self.orientation_axis,initial_position=self.ikpos)
         self.move_all(self.chain_to_deg(r))
         self.ikpos = r
 
 
     def button_pressed(self): 
-        if GPIO.input(self.BUTTON_GPIO) == GPIO.LOW:
-            log.debug("Button pressed")
-            return True
+        if not self.simulate:
+            if GPIO.input(self.BUTTON_GPIO) == GPIO.LOW:
+                log.debug("Button pressed")
+                return True
+            else:
+                return False
         else:
             return False
     

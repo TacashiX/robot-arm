@@ -1,0 +1,90 @@
+body {
+    margin: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    height: 100vh;
+}
+
+.split-container {
+    display: flex;
+    width: 100%;
+    height: 95%;
+    background-color: #f0f0f0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.split-column {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    margin: 5px;
+}
+
+.split-section {
+    overflow: hidden;
+    text-align: left;
+    transition: all 0.3s;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px;
+}
+
+.split-left .split-section {
+    background-color: #3b3a41;
+    color: #ffffff;
+    border: 2px solid rgb(95, 156, 180);
+}
+
+.split-right .split-section {
+    background-color: #f6f7fa;
+    color: #333333;
+    border: 2px solid grey;
+}
+
+.split-left .lower-section {
+    height: 20%; 
+    justify-content: start;
+    align-items: start;
+}
+
+.split-left .upper-section {
+    flex: 1; 
+}
+
+.split-left .upper-section .top-left{
+    flex: 1; 
+}
+
+.split-right .lower-section {
+    height: 60%; 
+}
+
+.split-right .upper-section {
+    flex: 1; 
+}
+
+p {
+    line-height: 30px;
+}
+
+@media (max-width: 768px) {
+    .split-container {
+	flex-direction: column;
+    }
+
+    .split-column {
+	flex-direction: row;
+	margin: 5px;
+	width: 100%;
+	height: 48vh;
+    }
+
+    .split-section {
+	flex: 1;
+	margin: 5px;
+	height: auto; 
+    }
+}
+
