@@ -1,4 +1,6 @@
+import functools
 import threading
+from functools import partial
 import src.xbox as xbox
 import time
 import src.arm as arm
@@ -10,10 +12,6 @@ import websockets
 log = logging.getLogger(__name__)
 interrupt_flag = threading.Event() 
 gp_input = [0,0,0,0,0,0,0]
-
-def emergency_stop():
-        print("Emergency stop initiated!")
-        interrupt_flag.set()
 
 def controller_mode(robot):
     robot.home()
@@ -56,50 +54,58 @@ async def ws_controller_mode(robot):
     z=0.2
 
     while not interrupt_flag.is_set():
-        print(f"testing: {gp_input}")
+        # print(f"testing: {gp_input}")
         if robot.button_pressed():
-            interrupt_flag.set()
             robot.home()
+            robot.mode = "M"
             break
         if gp_input[6] == 1: #Guide Button 
-            interrupt_flag.set()
             robot.disable_servos()
+            robot.mode = "M"
             break
         if gp_input[5] == 1: 
-            robot.home() 
-            break
-        
+            x, y, z = 0,-0.15,0.2
+            robot.move_coord([x,y,z],smooth=True)
+            #continuing here stops updating the controller and gets stuck in a loop 
+            gp_input[5] = 0
+            continue
+
+        #Main axes
         if abs(gp_input[0])>0.5: x=robot.apply_limit(x-gp_input[0]/300,-0.3,0.3)
         if abs(gp_input[1])>0.5: y=robot.apply_limit(y+gp_input[1]/300,-0.3,0)
         if abs(gp_input[2])>0.5: z=robot.apply_limit(z-gp_input[2]/300,0,0.4)
         
+        #gripper steps in 2-5 range for now 
+        if gp_input[3]>0.4: robot.grip(int(gp_input[3]/2*10))
+        if gp_input[4]>0.4: robot.grip(-int(gp_input[4]/2*10))
+
         st = time.time()
-        robot.move_coord([x,y,z])
+        if robot.coords != [x,y,z]:
+            robot.move_coord([x,y,z])
+            print("moving")
         end = time.time() 
         log.debug(f"IK Time: {end-st}")
         await asyncio.sleep(robot.accel_minmax[0]/1000) #no idea what speed to use yet
     log.info("Exiting controller mode.")
+    robot.mode = "M"
 
 
 async def main_loop(robot, s):
-
-    log.info("Entering Main Loop")
-
-    robot.mode = "C"
-    while True:
+    global gp_input
+    while not interrupt_flag.isSet():
         if robot.mode == "C":
             await ws_controller_mode(robot)
         else:
             if robot.button_pressed():
-                interrupt_flag.set()
                 robot.home()
-            log.debug(f"Robot is idle. {robot.mode=}")
-        robot.mode = "F"
-        s.update()
-        await asyncio.sleep(0.2)
+            if gp_input[6] == 1: #Guide Button 
+                robot.mode = "C"
+            log.info(f"Robot is idle. {robot.mode=}")
+        s.update() #only for simulation
+        await asyncio.sleep(0.1)
 
-async def handler(websocket, path):
-    update_task = asyncio.create_task(update(websocket))
+async def handler(websocket, r):
+    update_task = asyncio.create_task(update(websocket,r))
     receive_task = asyncio.create_task(receive(websocket))
     await asyncio.wait([ update_task, receive_task], return_when=asyncio.FIRST_COMPLETED)
 
@@ -108,16 +114,16 @@ async def receive(websocket):
     global gp_input
     async for message in websocket:
         gp_input = [ float(x) for x in message.split(",")]
-        print(f"Received: {message}")
+        # print(f"Received: {message}")
 
-async def update(websocket):
-    global gp_input
+async def update(websocket,r):
     while True:
-        await websocket.send(f"Current trigger: {gp_input[4]}")
-        await asyncio.sleep(1/500)
+        await websocket.send(f"Servo Angles: {r.curr_pos}\n\rPos: {r.coords}\nGripper: {r.gripper_pos}")
+        await asyncio.sleep(1/500) # don't have to update alot
 
 async def start(robot,bsim): 
-    start_server = websockets.serve(handler, "localhost", 8765)
+    passing_handler = functools.partial(handler, r=robot)
+    start_server = websockets.serve(passing_handler, "localhost", 8765)
     await asyncio.gather(start_server, main_loop(robot,bsim))
 
 if __name__ == "__main__":

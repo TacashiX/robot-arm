@@ -29,9 +29,9 @@ class Fenrir:
 
     offsets = [0, [1,0,-7],0 ,0 ,0, 0, 0]
     "List of servo offsets, Format: [base, [j1r1,j1r2,j1l], j2, j3, j4, j5, gripper]"
-    home_pos = [84, 40, 140, 100, 180, 90, 90]
+    home_pos = [84, 40, 140, 100, 180, 90]
     chain_home_pos = [ 0, -1.675516266666666, 0, 0,-0.872664444444444, 0, 0.872664444444444, 0, 1.745329444444444, 0,  0.785398000000000, 0, 1.570796, 0, 0]
-    curr_pos = [84, 40, 140, 100, 180, 90, 90]
+    curr_pos = [84, 40, 140, 100, 180, 90]
     speed = 15
     "time to move servo 1 degree in ms" 
     accel_minmax = [30,100]
@@ -40,8 +40,10 @@ class Fenrir:
     orientation_axis = "X"
     target_orientation = [0,0,1]
     gripper_limit = [0,50]
+    gripper_pos = 20
     mode = "M"
-    "Current mode. M | C | D (Manual, Controller, Demo)" 
+    "Current mode. M | C | E (Manual, Controller, Error Stop)" 
+    coords = [0,-0.15,0.2]
 
     def __init__(self, bullet=None, simulate=False, urdf_path="model/Fenrir.urdf"):
         self.simulate = simulate
@@ -102,10 +104,13 @@ class Fenrir:
             self.bullet.updatePosition(new_position)
         self.curr_pos = new_position
 
-    def move_gripper(self, step):
-        tmp_pos = self.apply_limit(self.curr_pos[6] + step, self.gripper_limit[0],self.gripper_limit[1])
-        self.servolist[6].angle = tmp_pos
-        self.curr_pos[6] = tmp_pos
+    def grip(self, step):
+        tmp_pos = self.apply_limit(self.gripper_pos + step, self.gripper_limit[0],self.gripper_limit[1],dec=0)
+        if not self.simulate:
+            self.servolist[6].angle = tmp_pos
+        else: 
+            log.info(f"Moving gripper {step} steps to {tmp_pos}")
+        self.gripper_pos = tmp_pos
 
     def move_j1(self, pos):
         self.servolist[1][0].angle = abs(pos + self.offsets[1][0] - 180)
@@ -189,11 +194,15 @@ class Fenrir:
         self.move_arm(new_pos)
 
 
-    def move_coord(self, coords): 
+    def move_coord(self, coords, smooth=False): 
         # log.debug(f"chain: {self.ikchain}, {self.ikpos=}, {coords=}")
         r = self.ikchain.inverse_kinematics(coords, self.target_orientation, orientation_mode=self.orientation_axis,initial_position=self.ikpos)
-        self.move_all(self.chain_to_deg(r))
         self.ikpos = r
+        self.coords = coords
+        if not smooth:
+            self.move_all(self.chain_to_deg(r))
+        else:
+            self.move_arm(self.chain_to_deg(r))
 
 
     def button_pressed(self): 
@@ -220,5 +229,5 @@ class Fenrir:
             min_rad = self.ikchain.links[i].bounds[0]
             scaled_deg = 180* (rad_positions[i] - min_rad) / (max_rad - min_rad)
             scaled_degrees.append(int(scaled_deg))
-        scaled_degrees.append(0)
+        # scaled_degrees.append(0)
         return scaled_degrees

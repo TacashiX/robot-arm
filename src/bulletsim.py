@@ -29,7 +29,7 @@ class Simulation:
             #append joint info [joint index, name, lower limit, upper limit]
             self.joints.append((j, info[1].decode("ascii"), info[8], info[9]))
             
-        self.joint_indices = [j[0] for j in self.joints]
+        self.joint_indices = [j[0] for j in self.joints[:-1]]
         log.info("Simulation initialized")
         log.debug(f'Detected joints: {self.joints}')
 

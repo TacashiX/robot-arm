@@ -1,5 +1,7 @@
 let socket = new WebSocket('ws://localhost:8765');
 const robotData = document.getElementById("robot-data");
+const wsConnectionStatus = document.getElementById("ws-connection-status");
+const ctrlConnectionStatus = document.getElementById("ctrl-connection-status");
 
 socket.onmessage = (event) => {
 	console.log('Received:', event.data);
@@ -66,3 +68,44 @@ function gameLoop() {
 	// array: [ x,y,z,ltrig, rtrig, start, guide ] 
 	var start = rAF(gameLoop);
 };
+
+
+document.addEventListener("DOMContentLoaded", function() {
+	document.getElementById("toggle-manual").classList.add("active");
+	const toggleButtons = document.querySelectorAll(".tri-state-toggle-button");
+
+	toggleButtons.forEach(function(button) {
+		button.addEventListener("click", function() {
+			toggleButtons.forEach(function(btn) {
+				btn.classList.remove("active");
+			});
+			this.classList.add("active");
+
+			switch (this.id) {
+				case 'toggle-manual':
+					console.log("State 1: Toggle Button 1 active");
+					//enable buttons and fields
+					wsConnectionStatus.classList.remove("disconnected")
+					wsConnectionStatus.classList.add("connected")
+					break;
+
+				case 'toggle-controller':
+					console.log("State 2: Toggle Button 2 active");
+					//disable buttons and fields
+					ctrlConnectionStatus.classList.remove("disconnected")
+					ctrlConnectionStatus.classList.add("connected")
+					break;
+
+				case 'toggle-disable':
+					console.log("State 3: Toggle Button 3 active");
+					//disable 
+					ctrlConnectionStatus.classList.remove("connected")
+					wsConnectionStatus.classList.remove("connected")
+					wsConnectionStatus.classList.add("disconnected")
+					ctrlConnectionStatus.classList.add("disconnected")
+					break;
+
+			}
+		});
+	});
+});
