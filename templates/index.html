@@ -4,121 +4,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            margin: 20px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            height: 100vh;
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Fenrir Control Panel</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.168.0/examples/jsm/",
+          "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@v0.168.0/examples/jsm/",
+          "urdf-loader":"https://cdn.jsdelivr.net/npm/urdf-loader@0.12.3/src/URDFLoader.min.js",
+          "urdf-viewer":"https://cdn.jsdelivr.net/npm/urdf-loader@0.12.3/src/urdf-manipulator-element.min.js"
         }
+      }
+    </script>
 
-        .split-container {
-            display: flex;
-            width: 100%;
-            height: 95%;
-            background-color: #f0f0f0;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .split-column {
-            display: flex;
-            flex: 1;
-            flex-direction: column;
-            margin: 5px;
-        }
-
-        .split-section {
-            overflow: hidden;
-            text-align: left;
-            transition: all 0.3s;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 5px;
-        }
-
-        .split-left .split-section {
-            background-color: #3b3a41;
-            color: #ffffff;
-            border: 2px solid rgb(95, 156, 180);
-        }
-
-        .split-right .split-section {
-            background-color: #f6f7fa;
-            color: #333333;
-            border: 2px solid grey;
-        }
-
-        /* Custom heights for the lower sections */
-        .split-left .lower-section {
-            height: 20%; /* Set custom height for the lower left section */
-            justify-content: start;
-            align-items: start;
-        }
-
-        .split-left .upper-section {
-            flex: 1; /* The upper section will take up the remaining space */
-        }
-
-        .split-right .lower-section {
-            height: 60%; /* Set custom height for the lower right section */
-        }
-
-        .split-right .upper-section {
-            flex: 1; /* The upper section will take up the remaining space */
-        }
-
-        p {
-            line-height: 30px;
-        }
-
-        @media (max-width: 768px) {
-            .split-container {
-                flex-direction: column;
-            }
-
-            .split-column {
-                flex-direction: row;
-                margin: 5px;
-                width: 100%;
-                height: 48vh;
-            }
-
-            .split-section {
-                flex: 1;
-                margin: 5px;
-                height: auto; /* Auto height for responsive design */
-            }
-        }
-    </style>
-    <title>Custom 4-Section Split Layout</title>
 </head>
 
 <body>
     <div class="split-container">
         <div class="split-column split-left">
-            <div class="split-section upper-section">
-                <h1>Left Top Section</h1>
-                <p>This is the top section on the left side.</p>
+            <div id="top-left" class="split-section upper-section">
+
             </div>
             <div class="split-section lower-section">
-                <!-- <h1>Left Bottom Section</h1> -->
-                {% block content %}
-                {% endblock %}
+                    <p>Angles:</p>
+                    <p id="lbl-angles">N/A</p>
+                    <p>Coords:</p>
+                    <p id="lbl-coords">N/A</p>
+                    <p>Gripper:</p>
+                    <p id="lbl-gripper">N/A</p>
             </div>
         </div>
         <div class="split-column split-right">
-            <div class="split-section upper-section">
-                <h1>Right Top Section</h1>
-                <p>This is the top section on the right side.</p>
+            <div class="split-section upper-section ctrl-container">
+                    <div class="column-left">
+                        <div class ="status-container">
+                            <span class="status-text">Fenrir</span>
+                            <div id="ws-connection-status" class="connection-status disconnected"></div>
+                        </div>
+                        <div class ="status-container">
+                            <span class="status-text">Controller</span>
+                            <div id="ctrl-connection-status" class="connection-status disconnected"></div>
+                        </div>
+
+                        <div class="tri-state-toggle">
+				<button class="tri-state-toggle-button" id="toggle-manual">
+					Manual
+				</button>
+				<button class="tri-state-toggle-button" id="toggle-controller">
+					Controller
+				</button>
+				<button class="tri-state-toggle-button" id="toggle-disable">
+					Disable
+				</button>
+			</div>
+
+                        <br><br>
+                        <label for="accmin">Accel Min</label>
+                        <input class="input m-control" type="text" id="accmin">
+
+                        <label for="accmax">Accel Max</label>
+                        <input class="input m-control" type="text" id="accmax">
+
+                        <br><br>
+                        <label for="speed">Speed</label>
+                        <input class="input m-control" type="text" id="speed">
+
+                        <label for="stdev">Std. Dev.</label>
+                        <input class="input m-control" type="text" id="stdev">
+                        <br><br>
+                        <button class="my-button m-control" id="btn-config">Update</button>
+                    </div>
+                    <div class="column-right">
+                        <button class="my-button m-control" id="btn-home">Home</button>
+                        <br><br>
+                        <label for="angles-input">Angles</label>
+                        <input class="input m-control" type="text" id="angles-input">
+                        <button class="my-button m-control" id="btn-angles">Go</button>
+                        <br><br>
+                        <label for="coords-input">Coords</label>
+                        <input class="input m-control" type="text" id="coords-input">
+                        <button class="my-button m-control" id="btn-coords">Go</button>
+                        <br><br>
+                        <div class ="status-container">
+                            <!-- <p>Smoothing</p> -->
+                            <span class="status-text">Smoothing</span>
+                            <label class="switch">
+                                <input type="checkbox" class="m-control" id="check-smoothing">
+                                <span class="slider m-control"></span>
+                            </label>
+                        </div>
+                        <div class ="status-container">
+                        <label for "grip-range" class="label-range">Gripper</label>
+                        <input class="m-control" id="grip-range" type="range" min="0" max="100" value="40" step="5" />
+                        </div>
+                    </div>
             </div>
             <div class="split-section lower-section">
-                <h1>Right Bottom Section</h1>
-                    <p><br>This is the bottom section on the right side. {{ somevar }}</p>
+                <div id="console-container">
+                        <pre id="console-output"></pre>
+                </div>
             </div>
         </div>
     </div>
+    <!-- <script type="module" src="/static/sim.js"></script> -->
+    <script type="module" src="/static/sim.js"></script>
+    <script type="module" src="/static/main.js"></script>
+    <!-- <urdf-viewer urdf= "model/Fenrir.urdf" up="X" display-shadow tabindex="0"></urdf-viewer> -->
 </body>
 
 </html>

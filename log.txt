@@ -1,0 +1,36 @@
+pybullet build time: Nov 28 2023 23:45:17
+INFO: Simulation initialized
+/home/taca/projects/robot-arm/main.py:96: DeprecationWarning: isSet() is deprecated, use is_set() instead
+  while not interrupt_flag.isSet():
+INFO: Moving to home position [84, 40, 140, 100, 180, 90]
+INFO: server listening on 127.0.0.1:8765
+INFO: connection open
+X connection to :0 broken (explicit kill or server shutdown).
+startThreads creating 1 threads.
+starting thread 0
+started thread 0 
+argc=2
+argv[0] = --unused
+argv[1] = --start_demo_name=Physics Server
+ExampleBrowserThreadFunc started
+X11 functions dynamically loaded using dlopen/dlsym OK!
+X11 functions dynamically loaded using dlopen/dlsym OK!
+Creating context
+Created GL 3.3 context
+Direct GLX rendering context obtained
+Making context current
+GL_VENDOR=Microsoft Corporation
+GL_RENDERER=D3D12 (NVIDIA GeForce GTX 1070)
+GL_VERSION=4.2 (Core Profile) Mesa 23.2.1-1ubuntu3.1~22.04.2
+GL_SHADING_LANGUAGE_VERSION=4.20
+pthread_getconcurrency()=0
+Version = 4.2 (Core Profile) Mesa 23.2.1-1ubuntu3.1~22.04.2
+Vendor = Microsoft Corporation
+Renderer = D3D12 (NVIDIA GeForce GTX 1070)
+b3Printf: Selected demo: Physics Server
+startThreads creating 1 threads.
+starting thread 0
+started thread 0 
+MotionThreadFunc thread started
+ven = Microsoft Corporation
+ven = Microsoft Corporation

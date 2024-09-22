@@ -1,27 +1,23 @@
-from flask import Flask, render_template, Response, request, jsonify
-import threading
-import main
-import src.arm as arm
-import src.bulletsim as sim 
+from flask import Flask, render_template, Response, send_from_directory, request, jsonify
 import time
+import subprocess
 
 app = Flask(__name__)
 
-# Start the robot and its main loop in a separate thread
-bsim = sim.Simulation()
-robot = arm.Fenrir(bullet=bsim, simulate=True)
-
-def run_robot():
-    main.main_loop(robot)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+# Custom static data
+@app.route('/model/<path:filename>')
+def custom_static(filename):
+    return send_from_directory('model/', filename)
+
 @app.route('/logs')
 def logs():
     def generate_logs():
-        with open('robot_log.txt', 'r') as log_file:
+        with open('log.txt', 'r') as log_file:
             while True:
                 line = log_file.readline()
                 if line:
@@ -29,33 +25,50 @@ def logs():
                 time.sleep(0.1)
     return Response(generate_logs(), mimetype='text/event-stream')
 
-@app.route('/current_variable')
-def current_variable():
-    return jsonify({"some_variable": robot.some_variable})
+@app.route('/config', methods=['POST','GET'])
+def config():
+    if request.method == "POST":
+        data = request.get_json()
+        print(f"updated config: {data}")
+        print(f'{data["min"]}')
+        return Response(status=204)
+    else: 
+        current_config = { "min": 1, "max": 2, "speed": 3, "stdev":4 } 
+        return current_config
 
-@app.route('/trigger', methods=['POST'])
-def trigger():
-    mode = request.json.get('command')
-    if mode:
-        if mode == "emergency_stop":
-            robot_script.current_mode = "emergency_stop"
-            robot_script.interrupt_flag.set()
-        else:
-            robot_script.current_mode = mode
-        return jsonify({"status": "success", "mode": mode})
-    return jsonify({"status": "error", "message": "No command received"})
+@app.route('/setmode',methods=['POST'])
+def setmode():
+    #set mode
+    m = request.get_json()
+    print(f"Set mode to {m['mode']}") 
+    return Response(status=204)
 
-@app.route('/execute', methods=['POST'])
-def execute_function():
-    function_name = request.json.get('function')
-    if function_name == "special_action":
-        robot_script.interrupt_flag.set()  # Interrupt any ongoing loop
-        robot.execute_special_action()
-        return jsonify({"status": "success", "function": function_name})
-    return jsonify({"status": "error", "message": "Invalid function name"})
+@app.route('/home')
+def home(): 
+    print("moving home")
+    return Response(status=204)
+
+@app.route('/grip', methods=['POST'])
+def grip():
+    data = request.get_json()
+    print(f'{data["pos"]}')
+    return Response(status=204)
+
+@app.route('/movecoords', methods=['POST'])
+def movecoord():
+    data = request.get_json()
+    print (f"moving to {data['coords']}. {data['smooth']=}")
+    return Response(status=204)
+
+@app.route('/moveangles', methods=['POST'])
+def moveangles():
+    data = request.get_json()
+    print (f"moving to {data['angles']}. {data['smooth']=}")
+    return Response(status=204)
+
 
 if __name__ == "__main__":
-    # Start the robot's main loop in a separate thread
-    threading.Thread(target=run_robot, daemon=True).start()
+    # subprocess.Popen(['firefox', 'localhost:5000'])
     app.run(host='0.0.0.0', port=5000, debug=True)
+    
 

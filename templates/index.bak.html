@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+        }
+
+        .split-container {
+            display: flex;
+            width: 100%;
+            height: 95%;
+            background-color: #f0f0f0;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .split-column {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            margin: 5px;
+        }
+
+        .split-section {
+            overflow: hidden;
+            text-align: left;
+            transition: all 0.3s;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 5px;
+        }
+
+        .split-left .split-section {
+            background-color: #3b3a41;
+            color: #ffffff;
+            border: 2px solid rgb(95, 156, 180);
+        }
+
+        .split-right .split-section {
+            background-color: #f6f7fa;
+            color: #333333;
+            border: 2px solid grey;
+        }
+
+        /* Custom heights for the lower sections */
+        .split-left .lower-section {
+            height: 20%; /* Set custom height for the lower left section */
+            justify-content: start;
+            align-items: start;
+        }
+
+        .split-left .upper-section {
+            flex: 1; /* The upper section will take up the remaining space */
+        }
+
+        .split-right .lower-section {
+            height: 60%; /* Set custom height for the lower right section */
+        }
+
+        .split-right .upper-section {
+            flex: 1; /* The upper section will take up the remaining space */
+        }
+
+        p {
+            line-height: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .split-container {
+                flex-direction: column;
+            }
+
+            .split-column {
+                flex-direction: row;
+                margin: 5px;
+                width: 100%;
+                height: 48vh;
+            }
+
+            .split-section {
+                flex: 1;
+                margin: 5px;
+                height: auto; /* Auto height for responsive design */
+            }
+        }
+    </style>
+    <title>Custom 4-Section Split Layout</title>
+</head>
+
+<body>
+    <div class="split-container">
+        <div class="split-column split-left">
+            <div class="split-section upper-section">
+                <h1>Left Top Section</h1>
+                <p>This is the top section on the left side.</p>
+            </div>
+            <div class="split-section lower-section">
+                <!-- <h1>Left Bottom Section</h1> -->
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+        <div class="split-column split-right">
+            <div class="split-section upper-section">
+                <h1>Right Top Section</h1>
+                <p>This is the top section on the right side.</p>
+            </div>
+            <div class="split-section lower-section">
+                <h1>Right Bottom Section</h1>
+                    <p><br>This is the bottom section on the right side. {{ somevar }}</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+

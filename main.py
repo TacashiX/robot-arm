@@ -8,43 +8,11 @@ import src.bulletsim as bulletsim
 import logging, sys 
 import asyncio
 import websockets
+import json
 
 log = logging.getLogger(__name__)
 interrupt_flag = threading.Event() 
 gp_input = [0,0,0,0,0,0,0]
-
-def controller_mode(robot):
-    robot.home()
-    joy = xbox.Joystick()
-    x=0
-    y=-0.15
-    z=0.2
-
-    while not interrupt_flag.is_set():
-        if robot.button_pressed():
-            interrupt_flag.set()
-            robot.home()
-            break
-        if joy.Guide() == 1:
-            interrupt_flag.set()
-            robot.disable_servos()
-            break
-        if joy.Start() == 1: 
-            robot.home() 
-            break
-        
-        if abs(joy.leftX())>0.5: x=robot.apply_limit(x-joy.leftX()/300,-0.3,0.3)
-        if abs(joy.leftY())>0.5: y=robot.apply_limit(y-joy.leftY()/300,-0.3,0)
-        if abs(joy.rightY())>0.5: z=robot.apply_limit(z+joy.rightY()/300,0,0.4)
-        
-        joy.leftTrigger()
-
-        st = time.time()
-        robot.move_coord([x,y,z])
-        end = time.time() 
-        log.debug(f"IK Time: {end-st}")
-        time.sleep(robot.accel_minmax[0]/1000) #no idea what speed to use yet
-    log.info("Exiting controller mode.")
 
 async def ws_controller_mode(robot):
     robot.home()
@@ -82,7 +50,6 @@ async def ws_controller_mode(robot):
         st = time.time()
         if robot.coords != [x,y,z]:
             robot.move_coord([x,y,z])
-            print("moving")
         end = time.time() 
         log.debug(f"IK Time: {end-st}")
         await asyncio.sleep(robot.accel_minmax[0]/1000) #no idea what speed to use yet
@@ -92,6 +59,7 @@ async def ws_controller_mode(robot):
 
 async def main_loop(robot, s):
     global gp_input
+    robot.mode = "C"
     while not interrupt_flag.isSet():
         if robot.mode == "C":
             await ws_controller_mode(robot)
@@ -118,7 +86,8 @@ async def receive(websocket):
 
 async def update(websocket,r):
     while True:
-        await websocket.send(f"Servo Angles: {r.curr_pos}\n\rPos: {r.coords}\nGripper: {r.gripper_pos}")
+        # await websocket.send(f"Servo Angles: {r.curr_pos}\n\rPos: {r.coords}\nGripper: {r.gripper_pos}")
+        await websocket.send(json.dumps([r.curr_pos, r.coords,r.gripper_pos]))
         await asyncio.sleep(1/500) # don't have to update alot
 
 async def start(robot,bsim): 
