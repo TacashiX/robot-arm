@@ -1,7 +1,7 @@
-import time
 import numpy as np
 import logging
 import ikpy.chain
+import asyncio
 log = logging.getLogger(__name__)
 
 # from sim import bulletsim
@@ -154,11 +154,11 @@ class Fenrir:
         #scale curve to respect min and max values and flip
         curve = np.interp(curve, (curve.min(), curve.max()), (self.accel_minmax[1], self.accel_minmax[0]))
         #return array with int values instead of float
-        log.debug(f"steps: {steps}, min: {self.accel_minmax[0]}, max: {self.accel_minmax[1]}, total time: {total_time}, stdevfactor: {self.accel_std_dev}")
-        log.debug(f'Acc curve: {curve.astype(int).tolist()}')
+        # log.debug(f"steps: {steps}, min: {self.accel_minmax[0]}, max: {self.accel_minmax[1]}, total time: {total_time}, stdevfactor: {self.accel_std_dev}")
+        # log.debug(f'Acc curve: {curve.astype(int).tolist()}')
         return curve.astype(int).tolist()
 
-    def move_arm(self, new_pos):
+    async def move_arm(self, new_pos):
         #calc distances
         log.info(f'Moving arm to {new_pos} from {self.curr_pos}')
         dist = np.array([(x - y) for x,y in zip(new_pos, self.curr_pos)])
@@ -167,18 +167,19 @@ class Fenrir:
         if abs(max(dist, key=abs)) < 6:
             log.debug('Less than 5 degrees remaining, finishing movement')
             self.move_all(new_pos)
-            time.sleep(self.accel_minmax[1]/1000)
+            # time.sleep(self.accel_minmax[1]/1000)
+            await asyncio.sleep(self.accel_minmax[1]/1000)
             return
 
         #generate curve
         curve = self.generate_accel_curve(total_time)
         step_distance = [ int(x/len(curve)) for x in dist ]
 
-        log.debug(f'{self.curr_pos=}')
-        log.debug(f'{new_pos=}')
-        log.debug(f'{dist=}')
-        log.debug(f'{step_distance=}')
-        log.debug(f'steps: {len(curve)}')
+        # log.debug(f'{self.curr_pos=}')
+        # log.debug(f'{new_pos=}')
+        # log.debug(f'{dist=}')
+        # log.debug(f'{step_distance=}')
+        # log.debug(f'steps: {len(curve)}')
 
         for ms in curve: 
             tmp_pos = [ y-1 if x == 0 and y>z else y+1 if x == 0 and y<z else x+y for x,y,z in zip(step_distance, self.curr_pos, new_pos) ]
@@ -188,13 +189,13 @@ class Fenrir:
                 return
 
             self.move_all(tmp_pos)
-            time.sleep(ms/1000)
+            await asyncio.sleep(ms/1000)
         #go again if position not reached
         log.debug("position not reached, going again")
-        self.move_arm(new_pos)
+        await self.move_arm(new_pos)
 
 
-    def move_coord(self, coords, smooth=False): 
+    async def move_coord(self, coords, smooth=False): 
         # log.debug(f"chain: {self.ikchain}, {self.ikpos=}, {coords=}")
         r = self.ikchain.inverse_kinematics(coords, self.target_orientation, orientation_mode=self.orientation_axis,initial_position=self.ikpos)
         self.ikpos = r
@@ -202,7 +203,7 @@ class Fenrir:
         if not smooth:
             self.move_all(self.chain_to_deg(r))
         else:
-            self.move_arm(self.chain_to_deg(r))
+            await self.move_arm(self.chain_to_deg(r))
 
 
     def button_pressed(self): 

@@ -1,5 +1,6 @@
 import pybullet as p
 import time 
+import asyncio
 import pybullet_data
 import pkg_resources
 import logging
@@ -76,4 +77,9 @@ class Simulation:
         p.setJointMotorControlArray(self.robotId, self.joint_indices, p.POSITION_CONTROL, targetPositions=radian_pos) 
         self.update()
 
+
+    async def update_loop(self):
+        while True: 
+            self.update()
+            await asyncio.sleep(1./240.)
 

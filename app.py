@@ -1,6 +1,11 @@
 from flask import Flask, render_template, Response, send_from_directory, request, jsonify
 import time
-import subprocess
+import logging, sys
+import threading
+import asyncio
+import src.arm as arm
+import src.bulletsim as sim
+import src.control  as control
 
 app = Flask(__name__)
 
@@ -66,9 +71,16 @@ def moveangles():
     print (f"moving to {data['angles']}. {data['smooth']=}")
     return Response(status=204)
 
-
 if __name__ == "__main__":
-    # subprocess.Popen(['firefox', 'localhost:5000'])
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG, format="%(levelname)s: %(message)s")
+    logging.getLogger('websockets.server').setLevel(logging.ERROR)
+    logging.getLogger('websockets.protocol').setLevel(logging.ERROR)
+    bsim = sim.Simulation(urdf="model/Fenrir.urdf")
+    robot = arm.Fenrir(bullet=bsim, simulate=True)
+
+    threading.Thread(target=asyncio.run, args=(control.start(robot,bsim),),daemon=True).start()
+    threading.Thread(target=asyncio.run, args=(bsim.update_loop(),),daemon=True).start()
+
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
     
 
