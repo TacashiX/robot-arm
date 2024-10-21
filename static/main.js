@@ -1,4 +1,3 @@
-// let socket = new WebSocket('ws://localhost:8765');
 import { updateSim } from "./sim.js";
 const wsConnectionStatus = document.getElementById("ws-connection-status");
 const ctrlConnectionStatus = document.getElementById("ctrl-connection-status");
@@ -16,12 +15,12 @@ function connect() {
 	}
 
 	socket.onmessage = (event) => {
-		console.log('Received:', event.data);
+		// console.log('Received:', event.data);
 		var data = JSON.parse(event.data);
 		anglesData.innerHTML = data[0];
 		coordsData.innerHTML = data[1];
 		gripperData.innerHTML = data[2];
-		console.log(typeof data[0]);
+		// console.log(typeof data[0]);
 		updateSim(data[0]);
 	};
 
@@ -142,6 +141,7 @@ eventSource.onmessage = function(event) {
 };
 
 const sendHttpRequest = (method, endpoint, data) => {
+	console.log(JSON.stringify(data));
 	return fetch(`http://` + location.host + `/${endpoint}`, {
 		method: method,
 		body: JSON.stringify(data),
@@ -165,16 +165,15 @@ const sendHttpRequest = (method, endpoint, data) => {
 };
 
 var conf = await sendHttpRequest("GET", "config");
-console.log(conf);
+// console.log(conf);
 document.getElementById("accmin").value = conf["min"];
 document.getElementById("accmax").value = conf["max"];
 document.getElementById("speed").value = conf["speed"];
 document.getElementById("stdev").value = conf["stdev"];
 
-
 document.getElementById("btn-config").onclick = updateButton;
 function updateButton() {
-	var data = { "min": document.getElementById("accmin").value, "max": document.getElementById("accmax").value, "speed": document.getElementById("speed").value, "stdev": document.getElementById("stdev").value };
+	var data = { "min": parseInt(document.getElementById("accmin").value), "max": parseInt(document.getElementById("accmax").value), "speed": parseInt(document.getElementById("speed").value), "stdev": parseInt(document.getElementById("stdev").value) };
 	sendHttpRequest("POST", "config", data);
 }
 
@@ -189,7 +188,7 @@ const checkSmoothing = document.getElementById("check-smoothing");
 document.getElementById("btn-coords").onclick = moveCoords;
 function moveCoords() {
 	if (coordsRegex.test(coordsInput.value)) {
-		sendHttpRequest("POST", "movecoords", { "coords": coordsInput.value.split(','), "smooth": checkSmoothing.checked });
+		sendHttpRequest("POST", "movecoords", { "coords": coordsInput.value.split(',').map(function(angle) { return parseInt(angle.trim()); }), "smooth": checkSmoothing.checked });
 	} else {
 		coordsInput.style.borderColor = "red";
 		setTimeout(function() {
@@ -203,7 +202,7 @@ const anglesInput = document.getElementById("angles-input");
 document.getElementById("btn-angles").onclick = moveAngles;
 function moveAngles() {
 	if (anglesRegex.test(anglesInput.value)) {
-		sendHttpRequest("POST", "moveangles", { "angles": anglesInput.value.split(','), "smooth": checkSmoothing.checked });
+		sendHttpRequest("POST", "moveangles", { "angles": anglesInput.value.split(',').map(function(angle) { return parseInt(angle.trim()); }), "smooth": checkSmoothing.checked });
 	} else {
 		anglesInput.style.borderColor = "red";
 		setTimeout(function() {
@@ -214,8 +213,10 @@ function moveAngles() {
 }
 
 const gripRange = document.getElementById("grip-range");
+gripRange.min = conf["gripmin"];
+gripRange.max = conf["gripmax"];
 gripRange.onmouseup = moveGrip;
 function moveGrip() {
-	sendHttpRequest("POST", "grip", { "pos": gripRange.value })
+	sendHttpRequest("POST", "grip", { "pos": parseInt(gripRange.value) })
 }
 

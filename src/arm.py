@@ -104,13 +104,17 @@ class Fenrir:
             self.bullet.updatePosition(new_position)
         self.curr_pos = new_position
 
-    def grip(self, step):
-        tmp_pos = self.apply_limit(self.gripper_pos + step, self.gripper_limit[0],self.gripper_limit[1],dec=0)
-        if not self.simulate:
+    def grip(self, step, abs=False):
+        if not self.simulate and not abs:
+            tmp_pos = self.apply_limit(self.gripper_pos + step, self.gripper_limit[0],self.gripper_limit[1],dec=0)
             self.servolist[6].angle = tmp_pos
+            self.gripper_pos = tmp_pos
+        elif not self.simulate and abs:
+            tmp_pos = self.apply_limit(step, self.gripper_limit[0],self.gripper_limit[1],dec=0)
+            self.servolist[6].angle = tmp_pos
+            self.gripper_pos = tmp_pos
         else: 
-            log.info(f"Moving gripper {step} steps to {tmp_pos}")
-        self.gripper_pos = tmp_pos
+            log.info(f"Simulating gripper {step=} {abs=}")
 
     def move_j1(self, pos):
         self.servolist[1][0].angle = abs(pos + self.offsets[1][0] - 180)
@@ -120,11 +124,11 @@ class Fenrir:
     def rest_j1(self):
         self.servolist[1][0].angle = None
 
-    def home(self):
+    async def home(self):
         log.info(f"Moving to home position {self.home_pos}")
-        self.move_all(self.home_pos)
+        # self.move_all(self.home_pos)
         self.ikpos = self.chain_home_pos
-        # self.move_arm(self.home_pos)
+        await self.move_arm(self.home_pos)
 
     def disable_servos(self):
         log.info("Disabling servos")

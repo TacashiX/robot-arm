@@ -136,7 +136,7 @@ export function updateSim(angles) {
 	if (angles != "N/A") {
 		// angles = angles.split(',').map(Number);
 		// console.log(angles);
-		console.log(angles[0]);
+		// console.log(angles[0]);
 		for (let i = 0; i < jlist.length; i++) {
 			robot.joints[jlist[i]].setJointValue(degToRad(angles[i], robot.joints[jlist[i]]['limit']['lower'], robot.joints[jlist[i]]['limit']['upper']));
 		}

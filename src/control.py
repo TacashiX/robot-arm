@@ -56,17 +56,13 @@ async def ws_controller_mode(robot):
 
 
 async def main_loop(robot, s):
-    global gp_input
-    robot.mode = "C"
     while not interrupt_flag.isSet():
         if robot.mode == "C":
             await ws_controller_mode(robot)
         else:
             if robot.button_pressed():
                 robot.home()
-            if gp_input[6] == 1: #Guide Button 
-                robot.mode = "C"
-            log.info(f"Robot is idle. {robot.mode=}")
+            # log.info(f"Robot is idle. {robot.mode=}")
         s.update() #only for simulation
         await asyncio.sleep(0.1)
 
